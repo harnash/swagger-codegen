@@ -92,6 +92,9 @@ public class PhpClientCodegen extends DefaultCodegen implements CodegenConfig {
         cliOptions.add(new CliOption("composerVendorName", "The vendor name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. yaypets"));
         cliOptions.add(new CliOption("composerProjectName", "The project name used in the composer package name. The template uses {{composerVendorName}}/{{composerProjectName}} for the composer package name. e.g. petstore-client"));
         cliOptions.add(new CliOption("artifactVersion", "The version to use in the composer package version field. e.g. 1.2.3"));
+
+        supportedLibraries.put("<default>", "HTTP client: cURL");
+        cliOptions.add(buildLibraryCliOption(supportedLibraries));
     }
 
     public String getPackagePath() {
