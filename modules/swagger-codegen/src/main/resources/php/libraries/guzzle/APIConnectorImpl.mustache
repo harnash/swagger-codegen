@@ -159,7 +159,7 @@ class APIConnectorImpl implements APIConnector {
      * @param string $contentTypes content type of request being sent
      * @param array $headers additional headers
      * @param string $responseType expected response type of the endpoint
-     * @return mixed list containing decoded response and response headers
+     * @return mixed list containing decoded response, status_code and response headers
      * @throws ApiException
      */
     public function send($uri, $method, $queryParams, $postData, $acceptTypes, $contentTypes,
@@ -224,7 +224,7 @@ class APIConnectorImpl implements APIConnector {
 
         $http_body = $response->getBody();
         $http_headers = "";
-        foreach ($message->getHeaders() as $name => $values) {
+        foreach ($response->getHeaders() as $name => $values) {
             foreach ($values as $value) {
                 $http_headers .= sprintf('%s: %s; ', $name, $value);
             }
@@ -253,6 +253,6 @@ class APIConnectorImpl implements APIConnector {
                 $response->getStatusCode(), $http_headers, $http_body);
         }
 
-        return array($http_data, $http_headers);
+        return array($data, $response->getStatusCode(), $http_headers);
     }
 }
