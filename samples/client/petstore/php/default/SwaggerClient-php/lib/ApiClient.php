@@ -93,7 +93,7 @@ class ApiClient
         }
 
         if ($apiConnector === null) {
-            $this->setApiConnector(new APICurlConnector());
+            $this->setApiConnector(new APIConnectorImpl());
         } else {
             $this->setApiConnector($apiConnector);
         }

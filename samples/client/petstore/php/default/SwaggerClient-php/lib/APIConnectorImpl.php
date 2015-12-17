@@ -15,18 +15,18 @@
  *  limitations under the License.
  */
 
-namespace {{invokerPackage}};
+namespace Swagger\Client;
 
 /**
- * APICurlConnector Class Doc Comment
+ * APIConnectorImpl Class Doc Comment
  *
  * @category Class
- * @package  {{invokerPackage}}
+ * @package  Swagger\Client
  * @author   http://github.com/swagger-api/swagger-codegen
  * @license  http://www.apache.org/licenses/LICENSE-2.0 Apache Licene v2
  * @link     https://github.com/swagger-api/swagger-codegen
  */
-class APICurlConnector implements APIConnector {
+class APIConnectorImpl implements APIConnector {
     const PATCH = "PATCH";
     const POST = "POST";
     const GET = "GET";
