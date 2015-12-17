@@ -18,7 +18,6 @@
 namespace Swagger\Client;
 
 use GuzzleHttp\Client;
-use GuzzleHttp\Psr7\Request;
 
 /**
  * APIConnectorImpl Class Doc Comment
@@ -208,7 +207,7 @@ class APIConnectorImpl implements APIConnector {
         } catch (RequestException $e) {
             $headers = "";
             if ($e->hasResponse()) {
-                $response = e->getResponse();
+                $response = $e->getResponse();
                 foreach ($message->getHeaders() as $name => $values) {
                     foreach ($values as $value) {
                         $headers .= sprintf('%s: %s; ', $name, $value);
@@ -216,7 +215,7 @@ class APIConnectorImpl implements APIConnector {
                 }
             }
             throw ApiException(
-                "Error making request to $url: " . print_r(e->getRequest(), true),
+                "Error making request to $url: " . print_r($e->getRequest(), true),
                 ($response ? $response->getStatusCode() : 0),
                 $headers,
                 ($response ? $response->getBody() : "")
@@ -255,5 +254,5 @@ class APIConnectorImpl implements APIConnector {
         }
 
         return array($http_data, $http_headers);
-    }x
+    }
 }

@@ -1,5 +1,6 @@
 <?php
 require_once(__DIR__ . '/SwaggerClient-php/autoload.php');
+require_once(__DIR__ . '/SwaggerClient-php/vendor/autoload.php');
 
 // show error reporting
 //ini_set('display_errors', 1);
