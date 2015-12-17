@@ -20,6 +20,7 @@ import io.swagger.codegen.CliOption;
 import io.swagger.codegen.ClientOptInput;
 import io.swagger.codegen.ClientOpts;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConfigLoader;
 import io.swagger.codegen.DefaultGenerator;
 import io.swagger.models.Swagger;
 import io.swagger.parser.SwaggerParser;
@@ -35,6 +36,7 @@ import config.Config;
 import config.ConfigParser;
 
 import java.io.File;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.ServiceLoader;
 
@@ -111,6 +113,9 @@ public class CodeGenMojo extends AbstractMojo {
     @Parameter(defaultValue = "true")
     private boolean addCompileSourceRoot = true;
 
+    @Parameter
+    protected Map<String, String> environmentVariables = new HashMap<String, String>();
+
     /**
      * The project being built.
      */
@@ -121,8 +126,19 @@ public class CodeGenMojo extends AbstractMojo {
     public void execute() throws MojoExecutionException {
         Swagger swagger = new SwaggerParser().read(inputSpec);
 
-        CodegenConfig config = forName(language);
+        CodegenConfig config = CodegenConfigLoader.forName(language);
         config.setOutputDir(output.getAbsolutePath());
+
+        if (environmentVariables != null) {
+            for(String key : environmentVariables.keySet()) {
+                String value = environmentVariables.get(key);
+                if(value == null) {
+                    // don't put null values
+                    value = "";
+                }
+                System.setProperty(key, value);
+            }
+        }
 
         if (null != templateDirectory) {
             config.additionalProperties().put(TEMPLATE_DIR_PARAM, templateDirectory.getAbsolutePath());
@@ -161,26 +177,19 @@ public class CodeGenMojo extends AbstractMojo {
         
         ClientOptInput input = new ClientOptInput().opts(new ClientOpts()).swagger(swagger);
         input.setConfig(config);
-        new DefaultGenerator().opts(input).generate();
+        
+        try {
+            new DefaultGenerator().opts(input).generate();
+        } catch (Exception e) {
+            // Maven logs exceptions thrown by plugins only if invoked with -e
+        	// I find it annoying to jump through hoops to get basic diagnostic information,
+        	// so let's log it in any case:
+            getLog().error(e); 
+            throw new MojoExecutionException("Code generation failed. See above for the full exception.");
+        }
 
         if (addCompileSourceRoot) {
             project.addCompileSourceRoot(output.toString());
-        }
-    }
-
-    private CodegenConfig forName(String name) {
-        ServiceLoader<CodegenConfig> loader = ServiceLoader.load(CodegenConfig.class);
-        for (CodegenConfig config : loader) {
-            if (config.getName().equals(name)) {
-                return config;
-            }
-        }
-
-        // else try to load directly
-        try {
-            return (CodegenConfig) Class.forName(name).newInstance();
-        } catch (Exception e) {
-            throw new RuntimeException("Can't load config class with name ".concat(name), e);
         }
     }
 }

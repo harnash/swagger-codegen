@@ -9,6 +9,8 @@
 
 @implementation SWGPetApi
 
+static SWGPetApi* singletonAPI = nil;
+
 #pragma mark - Initialize methods
 
 - (id) init {
@@ -36,11 +38,18 @@
 #pragma mark -
 
 +(SWGPetApi*) apiWithHeader:(NSString*)headerValue key:(NSString*)key {
-    static SWGPetApi* singletonAPI = nil;
 
     if (singletonAPI == nil) {
         singletonAPI = [[SWGPetApi alloc] init];
         [singletonAPI addHeader:headerValue forKey:key];
+    }
+    return singletonAPI;
+}
+
++(SWGPetApi*) sharedAPI {
+
+    if (singletonAPI == nil) {
+        singletonAPI = [[SWGPetApi alloc] init];
     }
     return singletonAPI;
 }
@@ -241,7 +250,7 @@
     
 
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
-    if(status != nil) {
+    if (status != nil) {
         
         queryParams[@"status"] = [[SWGQueryParamCollection alloc] initWithValuesAndFormat: status format: @"multi"];
         
@@ -325,7 +334,7 @@
     
 
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
-    if(tags != nil) {
+    if (tags != nil) {
         
         queryParams[@"tags"] = [[SWGQueryParamCollection alloc] initWithValuesAndFormat: tags format: @"multi"];
         
@@ -441,7 +450,7 @@
     NSString *requestContentType = [SWGApiClient selectHeaderContentType:@[]];
 
     // Authentication setting
-    NSArray *authSettings = @[@"petstore_auth", @"api_key"];
+    NSArray *authSettings = @[@"api_key"];
 
     id bodyParam = nil;
     NSMutableDictionary *formParams = [[NSMutableDictionary alloc] init];
@@ -613,8 +622,9 @@
     
     NSMutableDictionary* headerParams = [NSMutableDictionary dictionaryWithDictionary:self.defaultHeaders];
 
-    if(apiKey != nil)
+    if (apiKey != nil) {
         headerParams[@"api_key"] = apiKey;
+    }
     
 
     // HTTP header `Accept`

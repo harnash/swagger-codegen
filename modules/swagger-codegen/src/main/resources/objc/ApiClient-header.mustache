@@ -24,12 +24,19 @@
  */
 extern NSString *const {{classPrefix}}ResponseObjectErrorKey;
 
+/**
+ * Log debug message macro
+ */
+#define {{classPrefix}}DebugLog(format, ...) [{{classPrefix}}ApiClient debugLog:[NSString stringWithFormat:@"%s", __PRETTY_FUNCTION__] message: format, ##__VA_ARGS__];
 
 @interface {{classPrefix}}ApiClient : AFHTTPRequestOperationManager
 
 @property(nonatomic, assign) NSURLRequestCachePolicy cachePolicy;
 @property(nonatomic, assign) NSTimeInterval timeoutInterval;
 @property(nonatomic, readonly) NSOperationQueue* queue;
+
+/// In order to ensure the HTTPResponseHeaders are correct, it is recommended to initialize one {{classPrefix}}ApiClient instance per thread.
+@property(nonatomic, readonly) NSDictionary* HTTPResponseHeaders;
 
 /**
  * Clears Cache
@@ -199,5 +206,22 @@ extern NSString *const {{classPrefix}}ResponseObjectErrorKey;
  * @param object The query/path/header/form/body param to be sanitized.
  */
 - (id) sanitizeForSerialization:(id) object;
+
+/**
+ * Custom security policy
+ *
+ * @return AFSecurityPolicy
+ */
+- (AFSecurityPolicy *) customSecurityPolicy;
+
+/**
+ * Convert parameter to NSString
+ */
+- (NSString *) parameterToString: (id) param;
+
+/**
+ * Log debug message
+ */
++(void)debugLog:(NSString *)method message:(NSString *)format, ...;
 
 @end

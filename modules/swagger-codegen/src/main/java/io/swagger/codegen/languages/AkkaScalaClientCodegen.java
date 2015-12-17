@@ -3,7 +3,10 @@ package io.swagger.codegen.languages;
 import com.google.common.base.CaseFormat;
 import com.samskivert.mustache.Mustache;
 import com.samskivert.mustache.Template;
+
+import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenOperation;
 import io.swagger.codegen.CodegenProperty;
 import io.swagger.codegen.CodegenResponse;
@@ -67,7 +70,7 @@ public class AkkaScalaClientCodegen extends DefaultCodegen implements CodegenCon
         outputFolder = "generated-code/scala";
         modelTemplateFiles.put("model.mustache", ".scala");
         apiTemplateFiles.put("api.mustache", ".scala");
-        templateDir = "akka-scala";
+        embeddedTemplateDir = templateDir = "akka-scala";
         apiPackage = mainPackage + ".api";
         modelPackage = mainPackage + ".model";
 
@@ -80,10 +83,10 @@ public class AkkaScalaClientCodegen extends DefaultCodegen implements CodegenCon
                         "trait", "try", "true", "type", "val", "var", "while", "with", "yield")
         );
 
-        additionalProperties.put("invokerPackage", invokerPackage);
-        additionalProperties.put("groupId", groupId);
-        additionalProperties.put("artifactId", artifactId);
-        additionalProperties.put("artifactVersion", artifactVersion);
+        additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
+        additionalProperties.put(CodegenConstants.GROUP_ID, groupId);
+        additionalProperties.put(CodegenConstants.ARTIFACT_ID, artifactId);
+        additionalProperties.put(CodegenConstants.ARTIFACT_VERSION, artifactVersion);
         additionalProperties.put("configKey", configKey);
         additionalProperties.put("configKeyPath", configKeyPath);
         additionalProperties.put("defaultTimeout", defaultTimeoutInMs);
@@ -146,6 +149,9 @@ public class AkkaScalaClientCodegen extends DefaultCodegen implements CodegenCon
         );
         instantiationTypes.put("array", "ListBuffer");
         instantiationTypes.put("map", "Map");
+
+        cliOptions.add(new CliOption(CodegenConstants.MODEL_PACKAGE, CodegenConstants.MODEL_PACKAGE_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.API_PACKAGE, CodegenConstants.API_PACKAGE_DESC));
     }
 
     public CodegenType getTag() {

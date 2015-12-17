@@ -4,20 +4,15 @@ import io.swagger.client.ApiException;
 import io.swagger.client.ApiClient;
 import io.swagger.client.Configuration;
 import io.swagger.client.Pair;
-import io.swagger.client.TypeRef;
 
-import io.swagger.client.model.*;
-
-import java.util.*;
+import javax.ws.rs.core.GenericType;
 
 import io.swagger.client.model.User;
 import java.util.*;
 
-import java.io.File;
-import java.util.Map;
-import java.util.HashMap;
+import java.util.*;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-08-22T21:47:05.989+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-12-09T12:31:44.572-05:00")
 public class UserApi {
   private ApiClient apiClient;
 
@@ -44,10 +39,9 @@ public class UserApi {
    * @param body Created user object
    * @return void
    */
-  public void createUser (User body) throws ApiException {
+  public void createUser(User body) throws ApiException {
     Object postBody = body;
     
-
     // create path and map variables
     String path = "/user".replaceAll("\\{format\\}","json");
 
@@ -73,6 +67,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "POST", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     
@@ -84,10 +79,9 @@ public class UserApi {
    * @param body List of user object
    * @return void
    */
-  public void createUsersWithArrayInput (List<User> body) throws ApiException {
+  public void createUsersWithArrayInput(List<User> body) throws ApiException {
     Object postBody = body;
     
-
     // create path and map variables
     String path = "/user/createWithArray".replaceAll("\\{format\\}","json");
 
@@ -113,6 +107,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "POST", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     
@@ -124,10 +119,9 @@ public class UserApi {
    * @param body List of user object
    * @return void
    */
-  public void createUsersWithListInput (List<User> body) throws ApiException {
+  public void createUsersWithListInput(List<User> body) throws ApiException {
     Object postBody = body;
     
-
     // create path and map variables
     String path = "/user/createWithList".replaceAll("\\{format\\}","json");
 
@@ -153,6 +147,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "POST", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     
@@ -165,10 +160,9 @@ public class UserApi {
    * @param password The password for login in clear text
    * @return String
    */
-  public String loginUser (String username, String password) throws ApiException {
+  public String loginUser(String username, String password) throws ApiException {
     Object postBody = null;
     
-
     // create path and map variables
     String path = "/user/login".replaceAll("\\{format\\}","json");
 
@@ -198,8 +192,9 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
-    TypeRef returnType = new TypeRef<String>() {};
+    GenericType<String> returnType = new GenericType<String>() {};
     return apiClient.invokeAPI(path, "GET", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, returnType);
     
   }
@@ -209,10 +204,9 @@ public class UserApi {
    * 
    * @return void
    */
-  public void logoutUser () throws ApiException {
+  public void logoutUser() throws ApiException {
     Object postBody = null;
     
-
     // create path and map variables
     String path = "/user/logout".replaceAll("\\{format\\}","json");
 
@@ -238,6 +232,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "GET", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     
@@ -246,18 +241,17 @@ public class UserApi {
   /**
    * Get user by user name
    * 
-   * @param username The name that needs to be fetched. Use user1 for testing. 
+   * @param username The name that needs to be fetched. Use user1 for testing.
    * @return User
    */
-  public User getUserByName (String username) throws ApiException {
+  public User getUserByName(String username) throws ApiException {
     Object postBody = null;
     
     // verify the required parameter 'username' is set
     if (username == null) {
-       throw new ApiException(400, "Missing the required parameter 'username' when calling getUserByName");
+      throw new ApiException(400, "Missing the required parameter 'username' when calling getUserByName");
     }
     
-
     // create path and map variables
     String path = "/user/{username}".replaceAll("\\{format\\}","json")
       .replaceAll("\\{" + "username" + "\\}", apiClient.escapeString(username.toString()));
@@ -284,8 +278,9 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
-    TypeRef returnType = new TypeRef<User>() {};
+    GenericType<User> returnType = new GenericType<User>() {};
     return apiClient.invokeAPI(path, "GET", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, returnType);
     
   }
@@ -297,15 +292,14 @@ public class UserApi {
    * @param body Updated user object
    * @return void
    */
-  public void updateUser (String username, User body) throws ApiException {
+  public void updateUser(String username, User body) throws ApiException {
     Object postBody = body;
     
     // verify the required parameter 'username' is set
     if (username == null) {
-       throw new ApiException(400, "Missing the required parameter 'username' when calling updateUser");
+      throw new ApiException(400, "Missing the required parameter 'username' when calling updateUser");
     }
     
-
     // create path and map variables
     String path = "/user/{username}".replaceAll("\\{format\\}","json")
       .replaceAll("\\{" + "username" + "\\}", apiClient.escapeString(username.toString()));
@@ -332,6 +326,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "PUT", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     
@@ -343,15 +338,14 @@ public class UserApi {
    * @param username The name that needs to be deleted
    * @return void
    */
-  public void deleteUser (String username) throws ApiException {
+  public void deleteUser(String username) throws ApiException {
     Object postBody = null;
     
     // verify the required parameter 'username' is set
     if (username == null) {
-       throw new ApiException(400, "Missing the required parameter 'username' when calling deleteUser");
+      throw new ApiException(400, "Missing the required parameter 'username' when calling deleteUser");
     }
     
-
     // create path and map variables
     String path = "/user/{username}".replaceAll("\\{format\\}","json")
       .replaceAll("\\{" + "username" + "\\}", apiClient.escapeString(username.toString()));
@@ -378,6 +372,7 @@ public class UserApi {
     final String contentType = apiClient.selectHeaderContentType(contentTypes);
 
     String[] authNames = new String[] {  };
+
     
     apiClient.invokeAPI(path, "DELETE", queryParams, postBody, headerParams, formParams, accept, contentType, authNames, null);
     

@@ -25,6 +25,7 @@ from .rest import ApiException
 
 import os
 import re
+import sys
 import urllib
 import json
 import mimetypes
@@ -125,7 +126,7 @@ class ApiClient(object):
                             for k, v in iteritems(query_params)}
 
         # post parameters
-        if post_params:
+        if post_params or files:
             post_params = self.prepare_post_parameters(post_params, files)
             post_params = self.sanitize_for_serialization(post_params)
 
@@ -180,16 +181,19 @@ class ApiClient(object):
         If obj is str, int, float, bool, return directly.
         If obj is datetime.datetime, datetime.date
             convert to string in iso8601 format.
-        If obj is list, santize each element in the list.
+        If obj is list, sanitize each element in the list.
         If obj is dict, return the dict.
         If obj is swagger model, return the properties dict.
 
         :param obj: The data to serialize.
         :return: The serialized form of data.
         """
+        types = (str, int, float, bool, tuple)
+        if sys.version_info < (3,0):
+            types = types + (unicode,)
         if isinstance(obj, type(None)):
             return None
-        elif isinstance(obj, (str, int, float, bool, tuple)):
+        elif isinstance(obj, types):
             return obj
         elif isinstance(obj, list):
             return [self.sanitize_for_serialization(sub_obj)
@@ -270,7 +274,7 @@ class ApiClient(object):
         if klass in [int, float, str, bool]:
             return self.__deserialize_primitive(data, klass)
         elif klass == object:
-            return self.__deserialize_object()
+            return self.__deserialize_object(data)
         elif klass == date:
             return self.__deserialize_date(data)
         elif klass == datetime:
@@ -338,6 +342,12 @@ class ApiClient(object):
             return self.rest_client.HEAD(url,
                                          query_params=query_params,
                                          headers=headers)
+        elif method == "OPTIONS":
+            return self.rest_client.OPTIONS(url,
+                                            query_params=query_params,
+                                            headers=headers,
+                                            post_params=post_params,
+                                            body=body)
         elif method == "POST":
             return self.rest_client.POST(url,
                                          query_params=query_params,
@@ -443,7 +453,9 @@ class ApiClient(object):
         for auth in auth_settings:
             auth_setting = config.auth_settings().get(auth)
             if auth_setting:
-                if auth_setting['in'] == 'header':
+                if not auth_setting['value']:
+                    continue
+                elif auth_setting['in'] == 'header':
                     headers[auth_setting['key']] = auth_setting['value']
                 elif auth_setting['in'] == 'query':
                     querys[auth_setting['key']] = auth_setting['value']
@@ -495,13 +507,13 @@ class ApiClient(object):
             value = data
         return value
 
-    def __deserialize_object(self):
+    def __deserialize_object(self, value):
         """
-        Deserializes empty object.
+        Return a original value.
 
         :return: object.
         """
-        return object()
+        return value
 
     def __deserialize_date(self, string):
         """

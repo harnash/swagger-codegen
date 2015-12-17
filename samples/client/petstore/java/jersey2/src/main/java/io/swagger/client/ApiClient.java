@@ -6,6 +6,7 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Form;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
@@ -13,10 +14,9 @@ import javax.ws.rs.core.Response.Status;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.filter.LoggingFilter;
 import org.glassfish.jersey.media.multipart.FormDataBodyPart;
-import org.glassfish.jersey.media.multipart.FormDataMultiPart;
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.MultiPart;
 import org.glassfish.jersey.media.multipart.MultiPartFeature;
-import org.glassfish.jersey.media.multipart.file.FileDataBodyPart;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -30,21 +30,20 @@ import java.util.TimeZone;
 
 import java.net.URLEncoder;
 
-import java.io.IOException;
 import java.io.File;
 import java.io.UnsupportedEncodingException;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.text.ParseException;
 
 import io.swagger.client.auth.Authentication;
 import io.swagger.client.auth.HttpBasicAuth;
 import io.swagger.client.auth.ApiKeyAuth;
 import io.swagger.client.auth.OAuth;
 
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-08-22T21:47:05.989+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-12-09T12:31:44.572-05:00")
 public class ApiClient {
+  private Client client;
   private Map<String, Client> hostMap = new HashMap<String, Client>();
   private Map<String, String> defaultHeaderMap = new HashMap<String, String>();
   private boolean debugging = false;
@@ -53,25 +52,39 @@ public class ApiClient {
 
   private Map<String, Authentication> authentications;
 
+  private int statusCode;
+  private Map<String, List<String>> responseHeaders;
+
   private DateFormat dateFormat;
 
   public ApiClient() {
-    // Use ISO 8601 format for date and datetime.
-    // See https://en.wikipedia.org/wiki/ISO_8601
-    this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ");
+    // Use RFC3339 format for date and datetime.
+    // See http://xml2rfc.ietf.org/public/rfc/html/rfc3339.html#anchor14
+    this.dateFormat = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX");
 
     // Use UTC as the default time zone.
     this.dateFormat.setTimeZone(TimeZone.getTimeZone("UTC"));
 
+    this.json.setDateFormat((DateFormat) dateFormat.clone());
+
     // Set default User-Agent.
     setUserAgent("Java-Swagger");
 
+    buildClient();
+
     // Setup authentications (key: authentication name, value: authentication).
     authentications = new HashMap<String, Authentication>();
-    authentications.put("api_key", new ApiKeyAuth("header", "api_key"));
     authentications.put("petstore_auth", new OAuth());
+    authentications.put("api_key", new ApiKeyAuth("header", "api_key"));
     // Prevent the authentications from being modified.
     authentications = Collections.unmodifiableMap(authentications);
+  }
+
+  /**
+   * Gets the JSON instance to do JSON serialization and deserialization.
+   */
+  public JSON getJSON() {
+    return json;
   }
 
   public String getBasePath() {
@@ -81,6 +94,20 @@ public class ApiClient {
   public ApiClient setBasePath(String basePath) {
     this.basePath = basePath;
     return this;
+  }
+
+  /**
+   * Gets the status code of the previous request
+   */
+  public int getStatusCode() {
+    return statusCode;
+  }
+
+  /**
+   * Gets the response headers of the previous request
+   */
+  public Map<String, List<String>> getResponseHeaders() {
+    return responseHeaders;
   }
 
   /**
@@ -153,6 +180,19 @@ public class ApiClient {
   }
 
   /**
+   * Helper method to set access token for the first OAuth2 authentication.
+   */
+  public void setAccessToken(String accessToken) {
+    for (Authentication auth : authentications.values()) {
+      if (auth instanceof OAuth) {
+        ((OAuth) auth).setAccessToken(accessToken);
+        return;
+      }
+    }
+    throw new RuntimeException("No OAuth2 authentication configured!");
+  }
+
+  /**
    * Set the User-Agent header's value (by adding to the default header map).
    */
   public ApiClient setUserAgent(String userAgent) {
@@ -185,6 +225,7 @@ public class ApiClient {
    */
   public ApiClient setDebugging(boolean debugging) {
     this.debugging = debugging;
+    buildClient();
     return this;
   }
 
@@ -198,8 +239,10 @@ public class ApiClient {
   /**
    * Set the date format used to parse/format date parameters.
    */
-  public ApiClient getDateFormat(DateFormat dateFormat) {
+  public ApiClient setDateFormat(DateFormat dateFormat) {
     this.dateFormat = dateFormat;
+    // also set the date format for model (de)serialization with Date properties
+    this.json.setDateFormat((DateFormat) dateFormat.clone());
     return this;
   }
 
@@ -300,6 +343,17 @@ public class ApiClient {
   }
 
   /**
+   * Check if the given MIME is a JSON MIME.
+   * JSON MIME examples:
+   *   application/json
+   *   application/json; charset=UTF8
+   *   APPLICATION/JSON
+   */
+  public boolean isJsonMime(String mime) {
+    return mime != null && mime.matches("(?i)application\\/json(;.*)?");
+  }
+
+  /**
    * Select the Accept header's value from the given accepts array:
    *   if JSON exists in the given array, use it;
    *   otherwise use all of them (joining into a string)
@@ -309,8 +363,14 @@ public class ApiClient {
    *   null will be returned (not to set the Accept header explicitly).
    */
   public String selectHeaderAccept(String[] accepts) {
-    if (accepts.length == 0) return null;
-    if (StringUtil.containsIgnoreCase(accepts, "application/json")) return "application/json";
+    if (accepts.length == 0) {
+      return null;
+    }
+    for (String accept : accepts) {
+      if (isJsonMime(accept)) {
+        return accept;
+      }
+    }
     return StringUtil.join(accepts, ",");
   }
 
@@ -324,8 +384,14 @@ public class ApiClient {
    *   JSON will be used.
    */
   public String selectHeaderContentType(String[] contentTypes) {
-    if (contentTypes.length == 0) return "application/json";
-    if (StringUtil.containsIgnoreCase(contentTypes, "application/json")) return "application/json";
+    if (contentTypes.length == 0) {
+      return "application/json";
+    }
+    for (String contentType : contentTypes) {
+      if (isJsonMime(contentType)) {
+        return contentType;
+      }
+    }
     return contentTypes[0];
   }
 
@@ -344,18 +410,39 @@ public class ApiClient {
    * Serialize the given Java object into string entity according the given
    * Content-Type (only JSON is supported for now).
    */
-  public Entity<String> serialize(Object obj, String contentType) throws ApiException {
-    if (contentType.startsWith("application/json")) {
-      return Entity.json(json.serialize(obj));
+  public Entity<?> serialize(Object obj, Map<String, Object> formParams, String contentType) throws ApiException {
+    Entity<?> entity = null;
+    if (contentType.startsWith("multipart/form-data")) {
+      MultiPart multiPart = new MultiPart();
+      for (Entry<String, Object> param: formParams.entrySet()) {
+        if (param.getValue() instanceof File) {
+          File file = (File) param.getValue();
+          FormDataContentDisposition contentDisp = FormDataContentDisposition.name(param.getKey())
+              .fileName(file.getName()).size(file.length()).build();
+          multiPart.bodyPart(new FormDataBodyPart(contentDisp, file, MediaType.APPLICATION_OCTET_STREAM_TYPE));
+        } else {
+          FormDataContentDisposition contentDisp = FormDataContentDisposition.name(param.getKey()).build();
+          multiPart.bodyPart(new FormDataBodyPart(contentDisp, parameterToString(param.getValue())));
+        }
+      }
+      entity = Entity.entity(multiPart, MediaType.MULTIPART_FORM_DATA_TYPE);
+    } else if (contentType.startsWith("application/x-www-form-urlencoded")) {
+      Form form = new Form();
+      for (Entry<String, Object> param: formParams.entrySet()) {
+        form.param(param.getKey(), parameterToString(param.getValue()));
+      }
+      entity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
     } else {
-      throw new ApiException(400, "can not serialize object into Content-Type: " + contentType);
+      // We let jersey handle the serialization
+      entity = Entity.entity(obj, contentType);
     }
+    return entity;
   }
 
   /**
    * Deserialize response body to Java object according to the Content-Type.
    */
-  public <T> T deserialize(Response response, TypeRef returnType) throws ApiException {
+  public <T> T deserialize(Response response, GenericType<T> returnType) throws ApiException {
     String contentType = null;
     List<Object> contentTypes = response.getHeaders().get("Content-Type");
     if (contentTypes != null && !contentTypes.isEmpty())
@@ -363,17 +450,7 @@ public class ApiClient {
     if (contentType == null)
       throw new ApiException(500, "missing Content-Type in response");
 
-    String body;
-    if (response.hasEntity())
-      body = (String) response.readEntity(String.class);
-    else
-      body = "";
-
-    if (contentType.startsWith("application/json")) {
-      return json.deserialize(body, returnType);
-    } else {
-      throw new ApiException(500, "can not deserialize Content-Type: " + contentType);
-    }
+    return response.readEntity(returnType);
   }
 
   /**
@@ -391,15 +468,8 @@ public class ApiClient {
    * @param returnType The return type into which to deserialize the response
    * @return The response body in type of string
    */
-  public <T> T invokeAPI(String path, String method, List<Pair> queryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String accept, String contentType, String[] authNames, TypeRef returnType) throws ApiException {
+  public <T> T invokeAPI(String path, String method, List<Pair> queryParams, Object body, Map<String, String> headerParams, Map<String, Object> formParams, String accept, String contentType, String[] authNames, GenericType<T> returnType) throws ApiException {
     updateParamsForAuth(authNames, queryParams, headerParams);
-
-    final ClientConfig clientConfig = new ClientConfig();
-    clientConfig.register(MultiPartFeature.class);
-    if (debugging) {
-      clientConfig.register(LoggingFilter.class);
-    }
-    Client client = ClientBuilder.newClient(clientConfig);
 
     WebTarget target = client.target(this.basePath).path(path);
 
@@ -411,7 +481,7 @@ public class ApiClient {
       }
     }
 
-    Invocation.Builder invocationBuilder = target.request(contentType).accept(accept);
+    Invocation.Builder invocationBuilder = target.request().accept(accept);
 
     for (String key : headerParams.keySet()) {
       String value = headerParams.get(key);
@@ -429,59 +499,24 @@ public class ApiClient {
       }
     }
 
-    Entity<?> formEntity = null;
-
-    if (contentType.startsWith("multipart/form-data")) {
-      MultiPart multipart = new MultiPart();
-      for (Entry<String, Object> param: formParams.entrySet()) {
-        if (param.getValue() instanceof File) {
-          File file = (File) param.getValue();
-
-          FormDataMultiPart mp = new FormDataMultiPart();
-          mp.bodyPart(new FormDataBodyPart(param.getKey(), file.getName()));
-          multipart.bodyPart(mp, MediaType.MULTIPART_FORM_DATA_TYPE);
-
-          multipart.bodyPart(new FileDataBodyPart(param.getKey(), file, MediaType.APPLICATION_OCTET_STREAM_TYPE));
-        } else {
-          FormDataMultiPart mp = new FormDataMultiPart();
-          mp.bodyPart(new FormDataBodyPart(param.getKey(), parameterToString(param.getValue())));
-          multipart.bodyPart(mp, MediaType.MULTIPART_FORM_DATA_TYPE);
-        }
-      }
-      formEntity = Entity.entity(multipart, MediaType.MULTIPART_FORM_DATA_TYPE);
-    } else if (contentType.startsWith("application/x-www-form-urlencoded")) {
-      Form form = new Form();
-      for (Entry<String, Object> param: formParams.entrySet()) {
-        form.param(param.getKey(), parameterToString(param.getValue()));
-      }
-      formEntity = Entity.entity(form, MediaType.APPLICATION_FORM_URLENCODED_TYPE);
-    }
+    Entity<?> entity = serialize(body, formParams, contentType);
 
     Response response = null;
 
     if ("GET".equals(method)) {
       response = invocationBuilder.get();
     } else if ("POST".equals(method)) {
-      if (formEntity != null) {
-        response = invocationBuilder.post(formEntity);
-      } else if (body == null) {
-        response = invocationBuilder.post(null);
-      } else {
-        response = invocationBuilder.post(serialize(body, contentType));
-      }
+      response = invocationBuilder.post(entity);
     } else if ("PUT".equals(method)) {
-      if (formEntity != null) {
-        response = invocationBuilder.put(formEntity);
-      } else if (body == null) {
-        response = invocationBuilder.put(null);
-      } else {
-        response = invocationBuilder.put(serialize(body, contentType));
-      }
+      response = invocationBuilder.put(entity);
     } else if ("DELETE".equals(method)) {
       response = invocationBuilder.delete();
     } else {
       throw new ApiException(500, "unknown method type " + method);
     }
+
+    statusCode = response.getStatusInfo().getStatusCode();
+    responseHeaders = buildResponseHeaders(response);
 
     if (response.getStatus() == Status.NO_CONTENT.getStatusCode()) {
       return null;
@@ -501,21 +536,36 @@ public class ApiClient {
           // e.printStackTrace();
         }
       }
-      Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
-      for (String key: response.getHeaders().keySet()) {
-        List<Object> values = response.getHeaders().get(key);
-        List<String> headers = new ArrayList<String>();
-        for (Object o : values) {
-          headers.add(String.valueOf(o));
-        }
-        responseHeaders.put(key, headers);
-      }
       throw new ApiException(
         response.getStatus(),
         message,
-        responseHeaders,
+        buildResponseHeaders(response),
         respBody);
     }
+  }
+
+  private void buildClient() {
+    final ClientConfig clientConfig = new ClientConfig();
+    clientConfig.register(MultiPartFeature.class);
+    clientConfig.register(json);
+    clientConfig.register(org.glassfish.jersey.jackson.JacksonFeature.class);
+    if (debugging) {
+      clientConfig.register(LoggingFilter.class);
+    }
+    this.client = ClientBuilder.newClient(clientConfig);
+  }
+
+  private Map<String, List<String>> buildResponseHeaders(Response response) {
+    Map<String, List<String>> responseHeaders = new HashMap<String, List<String>>();
+    for (Entry<String, List<Object>> entry: response.getHeaders().entrySet()) {
+      List<Object> values = entry.getValue();
+      List<String> headers = new ArrayList<String>();
+      for (Object o : values) {
+        headers.add(String.valueOf(o));
+      }
+      responseHeaders.put(entry.getKey(), headers);
+    }
+    return responseHeaders;
   }
 
   /**

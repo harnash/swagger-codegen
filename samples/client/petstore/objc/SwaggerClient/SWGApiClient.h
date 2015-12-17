@@ -28,12 +28,19 @@
  */
 extern NSString *const SWGResponseObjectErrorKey;
 
+/**
+ * Log debug message macro
+ */
+#define SWGDebugLog(format, ...) [SWGApiClient debugLog:[NSString stringWithFormat:@"%s", __PRETTY_FUNCTION__] message: format, ##__VA_ARGS__];
 
 @interface SWGApiClient : AFHTTPRequestOperationManager
 
 @property(nonatomic, assign) NSURLRequestCachePolicy cachePolicy;
 @property(nonatomic, assign) NSTimeInterval timeoutInterval;
 @property(nonatomic, readonly) NSOperationQueue* queue;
+
+/// In order to ensure the HTTPResponseHeaders are correct, it is recommended to initialize one SWGApiClient instance per thread.
+@property(nonatomic, readonly) NSDictionary* HTTPResponseHeaders;
 
 /**
  * Clears Cache
@@ -203,5 +210,22 @@ extern NSString *const SWGResponseObjectErrorKey;
  * @param object The query/path/header/form/body param to be sanitized.
  */
 - (id) sanitizeForSerialization:(id) object;
+
+/**
+ * Custom security policy
+ *
+ * @return AFSecurityPolicy
+ */
+- (AFSecurityPolicy *) customSecurityPolicy;
+
+/**
+ * Convert parameter to NSString
+ */
+- (NSString *) parameterToString: (id) param;
+
+/**
+ * Log debug message
+ */
++(void)debugLog:(NSString *)method message:(NSString *)format, ...;
 
 @end

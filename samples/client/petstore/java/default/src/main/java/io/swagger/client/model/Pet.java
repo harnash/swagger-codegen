@@ -1,17 +1,19 @@
 package io.swagger.client.model;
 
+import io.swagger.client.StringUtil;
 import io.swagger.client.model.Category;
-import java.util.*;
 import io.swagger.client.model.Tag;
+import java.util.*;
 
 
+import java.util.Objects;
 
 import io.swagger.annotations.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 
 
 @ApiModel(description = "")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-08-24T18:19:30.060+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-11-29T00:18:25.953+08:00")
 public class Pet   {
   
   private Long id = null;
@@ -20,8 +22,11 @@ public class Pet   {
   private List<String> photoUrls = new ArrayList<String>();
   private List<Tag> tags = new ArrayList<Tag>();
 
+
 public enum StatusEnum {
-  AVAILABLE("available"), PENDING("pending"), SOLD("sold");
+  AVAILABLE("available"),
+  PENDING("pending"),
+  SOLD("sold");
 
   private String value;
 
@@ -30,6 +35,7 @@ public enum StatusEnum {
   }
 
   @Override
+  @JsonValue
   public String toString() {
     return value;
   }
@@ -113,17 +119,39 @@ public enum StatusEnum {
   
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Pet pet = (Pet) o;
+    return Objects.equals(id, pet.id) &&
+        Objects.equals(category, pet.category) &&
+        Objects.equals(name, pet.name) &&
+        Objects.equals(photoUrls, pet.photoUrls) &&
+        Objects.equals(tags, pet.tags) &&
+        Objects.equals(status, pet.status);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, category, name, photoUrls, tags, status);
+  }
+
+  @Override
   public String toString()  {
     StringBuilder sb = new StringBuilder();
     sb.append("class Pet {\n");
     
-    sb.append("  id: ").append(id).append("\n");
-    sb.append("  category: ").append(category).append("\n");
-    sb.append("  name: ").append(name).append("\n");
-    sb.append("  photoUrls: ").append(photoUrls).append("\n");
-    sb.append("  tags: ").append(tags).append("\n");
-    sb.append("  status: ").append(status).append("\n");
-    sb.append("}\n");
+    sb.append("    id: ").append(StringUtil.toIndentedString(id)).append("\n");
+    sb.append("    category: ").append(StringUtil.toIndentedString(category)).append("\n");
+    sb.append("    name: ").append(StringUtil.toIndentedString(name)).append("\n");
+    sb.append("    photoUrls: ").append(StringUtil.toIndentedString(photoUrls)).append("\n");
+    sb.append("    tags: ").append(StringUtil.toIndentedString(tags)).append("\n");
+    sb.append("    status: ").append(StringUtil.toIndentedString(status)).append("\n");
+    sb.append("}");
     return sb.toString();
   }
 }

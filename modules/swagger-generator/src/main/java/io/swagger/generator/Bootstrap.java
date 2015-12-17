@@ -16,10 +16,14 @@
 
 package io.swagger.generator;
 
+import org.apache.commons.io.IOUtils;
+
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class Bootstrap extends HttpServlet {
     public void init(ServletConfig config) throws ServletException {
@@ -33,8 +37,29 @@ public class Bootstrap extends HttpServlet {
         bc.setTermsOfServiceUrl("http://swagger.io/terms/");
         bc.setContact("apiteam@swagger.io");
         bc.setLicense("Apache 2.0");
-        bc.setVersion("1.0.0");
-        bc.setHost("generator.swagger.io");
+        InputStream stream = getClass().getResourceAsStream("/version.prop");
+        if(stream == null) {
+            bc.setVersion("0.0.0");
+        } else {
+            try {
+                bc.setVersion(IOUtils.toString(stream, "UTF-8"));
+                stream.close();
+            } catch (IOException e) {
+                bc.setVersion("0.0.0");
+            }
+        }
+
+        String host = config.getInitParameter("generator.host");
+        if(host == null) {
+            host = "generator.swagger.io";
+        }
+        bc.setHost(host);
+
+        String scheme = config.getInitParameter("generator.protocol");
+        if(host == null) {
+            scheme = "https";
+        }
+        bc.setSchemes(new String[]{scheme});
         bc.setLicenseUrl("http://www.apache.org/licenses/LICENSE-2.0.html");
         bc.setResourcePackage("io.swagger.generator.resource");
         bc.setScan(true);

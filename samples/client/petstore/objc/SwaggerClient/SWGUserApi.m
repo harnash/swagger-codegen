@@ -9,6 +9,8 @@
 
 @implementation SWGUserApi
 
+static SWGUserApi* singletonAPI = nil;
+
 #pragma mark - Initialize methods
 
 - (id) init {
@@ -36,11 +38,18 @@
 #pragma mark -
 
 +(SWGUserApi*) apiWithHeader:(NSString*)headerValue key:(NSString*)key {
-    static SWGUserApi* singletonAPI = nil;
 
     if (singletonAPI == nil) {
         singletonAPI = [[SWGUserApi alloc] init];
         [singletonAPI addHeader:headerValue forKey:key];
+    }
+    return singletonAPI;
+}
+
++(SWGUserApi*) sharedAPI {
+
+    if (singletonAPI == nil) {
+        singletonAPI = [[SWGUserApi alloc] init];
     }
     return singletonAPI;
 }
@@ -322,11 +331,11 @@
     
 
     NSMutableDictionary* queryParams = [[NSMutableDictionary alloc] init];
-    if(username != nil) {
+    if (username != nil) {
         
         queryParams[@"username"] = username;
     }
-    if(password != nil) {
+    if (password != nil) {
         
         queryParams[@"password"] = password;
     }
@@ -461,7 +470,7 @@
 ///
 /// Get user by user name
 /// 
-///  @param username The name that needs to be fetched. Use user1 for testing. 
+///  @param username The name that needs to be fetched. Use user1 for testing.
 ///
 ///  @returns SWGUser*
 ///

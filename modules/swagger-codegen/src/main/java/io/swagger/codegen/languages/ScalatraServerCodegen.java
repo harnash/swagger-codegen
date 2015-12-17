@@ -1,6 +1,8 @@
 package io.swagger.codegen.languages;
 
+import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenOperation;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
@@ -28,7 +30,7 @@ public class ScalatraServerCodegen extends DefaultCodegen implements CodegenConf
         outputFolder = "generated-code/scalatra";
         modelTemplateFiles.put("model.mustache", ".scala");
         apiTemplateFiles.put("api.mustache", ".scala");
-        templateDir = "scalatra";
+        embeddedTemplateDir = templateDir = "scalatra";
         apiPackage = "com.wordnik.client.api";
         modelPackage = "com.wordnik.client.model";
 
@@ -73,10 +75,10 @@ public class ScalatraServerCodegen extends DefaultCodegen implements CodegenConf
         additionalProperties.put("infoEmail", "apiteam@swagger.io");
         additionalProperties.put("licenseInfo", "All rights reserved");
         additionalProperties.put("licenseUrl", "http://apache.org/licenses/LICENSE-2.0.html");
-        additionalProperties.put("invokerPackage", invokerPackage);
-        additionalProperties.put("groupId", groupId);
-        additionalProperties.put("artifactId", artifactId);
-        additionalProperties.put("artifactVersion", artifactVersion);
+        additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
+        additionalProperties.put(CodegenConstants.GROUP_ID, groupId);
+        additionalProperties.put(CodegenConstants.ARTIFACT_ID, artifactId);
+        additionalProperties.put(CodegenConstants.ARTIFACT_VERSION, artifactVersion);
 
         supportingFiles.add(new SupportingFile("README.mustache", "", "README.md"));
         supportingFiles.add(new SupportingFile("build.sbt", "", "build.sbt"));
@@ -116,6 +118,9 @@ public class ScalatraServerCodegen extends DefaultCodegen implements CodegenConf
         importMapping.put("LocalDateTime", "org.joda.time.LocalDateTime");
         importMapping.put("LocalDate", "org.joda.time.LocalDate");
         importMapping.put("LocalTime", "org.joda.time.LocalTime");
+
+        cliOptions.add(new CliOption(CodegenConstants.MODEL_PACKAGE, CodegenConstants.MODEL_PACKAGE_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.API_PACKAGE, CodegenConstants.API_PACKAGE_DESC));
     }
 
     public CodegenType getTag() {

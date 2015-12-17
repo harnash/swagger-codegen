@@ -2,12 +2,11 @@ package io.swagger.codegen.languages;
 
 import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
 import io.swagger.codegen.SupportingFile;
-import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
+import io.swagger.models.properties.*;
 
 import java.io.File;
 import java.util.Arrays;
@@ -27,7 +26,7 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
         outputFolder = "generated-code" + File.separatorChar + "python";
         modelTemplateFiles.put("model.mustache", ".py");
         apiTemplateFiles.put("api.mustache", ".py");
-        templateDir = "python";
+        embeddedTemplateDir = templateDir = "python";
 
         languageSpecificPrimitives.clear();
         languageSpecificPrimitives.add("int");
@@ -41,6 +40,7 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
         typeMapping.clear();
         typeMapping.put("integer", "int");
         typeMapping.put("float", "float");
+        typeMapping.put("number", "float");
         typeMapping.put("long", "int");
         typeMapping.put("double", "float");
         typeMapping.put("array", "list");
@@ -61,30 +61,33 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
                         "return", "def", "for", "lambda", "try"));
 
         cliOptions.clear();
-        cliOptions.add(new CliOption("packageName", "python package name (convention: snake_case), default: swagger_client"));
-        cliOptions.add(new CliOption("packageVersion", "python package version, default: 1.0.0"));
+        cliOptions.add(new CliOption(CodegenConstants.PACKAGE_NAME, "python package name (convention: snake_case).")
+                .defaultValue("swagger_client"));
+        cliOptions.add(new CliOption(CodegenConstants.PACKAGE_VERSION, "python package version.")
+                .defaultValue("1.0.0"));
+        cliOptions.add(new CliOption(CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG, CodegenConstants.SORT_PARAMS_BY_REQUIRED_FLAG_DESC));
     }
 
     @Override
     public void processOpts() {
         super.processOpts();
 
-        if (additionalProperties.containsKey("packageName")) {
-            setPackageName((String) additionalProperties.get("packageName"));
+        if (additionalProperties.containsKey(CodegenConstants.PACKAGE_NAME)) {
+            setPackageName((String) additionalProperties.get(CodegenConstants.PACKAGE_NAME));
         }
         else {
             setPackageName("swagger_client");
         }
 
-        if (additionalProperties.containsKey("packageVersion")) {
-            setPackageVersion((String) additionalProperties.get("packageVersion"));
+        if (additionalProperties.containsKey(CodegenConstants.PACKAGE_VERSION)) {
+            setPackageVersion((String) additionalProperties.get(CodegenConstants.PACKAGE_VERSION));
         }
         else {
             setPackageVersion("1.0.0");
         }
 
-        additionalProperties.put("packageName", packageName);
-        additionalProperties.put("packageVersion", packageVersion);
+        additionalProperties.put(CodegenConstants.PACKAGE_NAME, packageName);
+        additionalProperties.put(CodegenConstants.PACKAGE_VERSION, packageVersion);
 
         String swaggerFolder = packageName;
 
@@ -161,14 +164,13 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
         return type;
     }
 
-    public String toDefaultValue(Property p) {
-        return "None";
-    }
-
     @Override
     public String toVarName(String name) {
-        // replace - with _ e.g. created-at => created_at
-        name = name.replaceAll("-", "_");
+        // sanitize name
+        name = sanitizeName(name);
+
+        // remove dollar sign
+        name = name.replaceAll("$", "");
 
         // if it's all uppper case, convert to lower case
         if (name.matches("^[A-Z_]*$")) {
@@ -177,7 +179,7 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
 
         // underscore the variable name
         // petId => pet_id
-        name = underscore(dropDots(name));
+        name = underscore(name);
 
         // remove leading underscore
         name = name.replaceAll("^_*", "");
@@ -198,6 +200,11 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
 
     @Override
     public String toModelName(String name) {
+        name = sanitizeName(name);
+
+        // remove dollar sign
+        name = name.replaceAll("$", "");
+
         // model name cannot use reserved keyword, e.g. return
         if (reservedWords.contains(name)) {
             throw new RuntimeException(name + " (reserved word) cannot be used as a model name");
@@ -258,7 +265,7 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
             throw new RuntimeException(operationId + " (reserved word) cannot be used as method name");
         }
 
-        return underscore(operationId);
+        return underscore(sanitizeName(operationId));
     }
 
     public void setPackageName(String packageName) {
@@ -272,12 +279,61 @@ public class PythonClientCodegen extends DefaultCodegen implements CodegenConfig
     /**
      * Generate Python package name from String `packageName`
      *
-     * (PEP 0008) Python packages should also have short, all-lowercase names, 
+     * (PEP 0008) Python packages should also have short, all-lowercase names,
      * although the use of underscores is discouraged.
      */
     public String generatePackageName(String packageName) {
-        return underscore(packageName.replaceAll("[^\\w]+", "")); 
+        return underscore(packageName.replaceAll("[^\\w]+", ""));
     }
+
+    /**
+     * Return the default value of the property
+     *
+     * @param p Swagger property object
+     * @return string presentation of the default value of the property
+     */
+    @Override
+    public String toDefaultValue(Property p) {
+        if (p instanceof StringProperty) {
+            StringProperty dp = (StringProperty) p;
+            if (dp.getDefault() != null) {
+                return "'" + dp.getDefault().toString() + "'";
+            }
+        } else if (p instanceof BooleanProperty) {
+            BooleanProperty dp = (BooleanProperty) p;
+            if (dp.getDefault() != null) {
+                if (dp.getDefault().toString().equalsIgnoreCase("false"))
+                    return "False";
+                else
+                    return "True";
+            }
+        } else if (p instanceof DateProperty) {
+            // TODO
+        } else if (p instanceof DateTimeProperty) {
+            // TODO
+        } else if (p instanceof DoubleProperty) {
+            DoubleProperty dp = (DoubleProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof FloatProperty) {
+            FloatProperty dp = (FloatProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof IntegerProperty) {
+            IntegerProperty dp = (IntegerProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        } else if (p instanceof LongProperty) {
+            LongProperty dp = (LongProperty) p;
+            if (dp.getDefault() != null) {
+                return dp.getDefault().toString();
+            }
+        }
+
+        return null;
+    }
+
 }
-
-

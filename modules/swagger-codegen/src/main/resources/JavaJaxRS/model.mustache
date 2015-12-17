@@ -5,12 +5,14 @@ package {{package}};
 
 import io.swagger.annotations.*;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Objects;
 {{#models}}
 
-{{#model}}{{#description}}
+{{#model}}{{#unescapedDescription}}
 /**
- * {{description}}
- **/{{/description}}
+ * {{unescapedDescription}}
+ **/{{/unescapedDescription}}
 @ApiModel(description = "{{{description}}}")
 {{>generatedAnnotation}}
 public class {{classname}} {{#parent}}extends {{{parent}}}{{/parent}} {
@@ -22,13 +24,13 @@ public class {{classname}} {{#parent}}extends {{{parent}}}{{/parent}} {
   private {{{datatype}}} {{name}} = {{{defaultValue}}};{{/isEnum}}{{/vars}}
 
   {{#vars}}
-  /**{{#description}}
-   * {{{description}}}{{/description}}{{#minimum}}
+  /**{{#unescapedDescription}}
+   * {{{unescapedDescription}}}{{/unescapedDescription}}{{#minimum}}
    * minimum: {{minimum}}{{/minimum}}{{#maximum}}
    * maximum: {{maximum}}{{/maximum}}
    **/
   @ApiModelProperty({{#required}}required = {{required}}, {{/required}}value = "{{{description}}}")
-  @JsonProperty("{{name}}")
+  @JsonProperty("{{baseName}}")
   public {{{datatypeWithEnum}}} {{getter}}() {
     return {{name}};
   }
@@ -37,6 +39,25 @@ public class {{classname}} {{#parent}}extends {{{parent}}}{{/parent}} {
   }
 
   {{/vars}}
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    {{classname}} {{classVarName}} = ({{classname}}) o;{{#hasVars}}
+    return {{#vars}}Objects.equals({{name}}, {{classVarName}}.{{name}}){{#hasMore}} &&
+        {{/hasMore}}{{^hasMore}};{{/hasMore}}{{/vars}}{{/hasVars}}{{^hasVars}}
+    return true;{{/hasVars}}
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash({{#vars}}{{name}}{{#hasMore}}, {{/hasMore}}{{/vars}});
+  }
 
   @Override
   public String toString()  {

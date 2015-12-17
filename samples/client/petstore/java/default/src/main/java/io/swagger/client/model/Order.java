@@ -1,15 +1,17 @@
 package io.swagger.client.model;
 
+import io.swagger.client.StringUtil;
 import java.util.Date;
 
 
+import java.util.Objects;
 
 import io.swagger.annotations.*;
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.*;
 
 
 @ApiModel(description = "")
-@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-08-24T18:19:30.060+08:00")
+@javax.annotation.Generated(value = "class io.swagger.codegen.languages.JavaClientCodegen", date = "2015-11-29T00:18:25.953+08:00")
 public class Order   {
   
   private Long id = null;
@@ -17,8 +19,11 @@ public class Order   {
   private Integer quantity = null;
   private Date shipDate = null;
 
+
 public enum StatusEnum {
-  PLACED("placed"), APPROVED("approved"), DELIVERED("delivered");
+  PLACED("placed"),
+  APPROVED("approved"),
+  DELIVERED("delivered");
 
   private String value;
 
@@ -27,6 +32,7 @@ public enum StatusEnum {
   }
 
   @Override
+  @JsonValue
   public String toString() {
     return value;
   }
@@ -111,17 +117,39 @@ public enum StatusEnum {
   
 
   @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    Order order = (Order) o;
+    return Objects.equals(id, order.id) &&
+        Objects.equals(petId, order.petId) &&
+        Objects.equals(quantity, order.quantity) &&
+        Objects.equals(shipDate, order.shipDate) &&
+        Objects.equals(status, order.status) &&
+        Objects.equals(complete, order.complete);
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(id, petId, quantity, shipDate, status, complete);
+  }
+
+  @Override
   public String toString()  {
     StringBuilder sb = new StringBuilder();
     sb.append("class Order {\n");
     
-    sb.append("  id: ").append(id).append("\n");
-    sb.append("  petId: ").append(petId).append("\n");
-    sb.append("  quantity: ").append(quantity).append("\n");
-    sb.append("  shipDate: ").append(shipDate).append("\n");
-    sb.append("  status: ").append(status).append("\n");
-    sb.append("  complete: ").append(complete).append("\n");
-    sb.append("}\n");
+    sb.append("    id: ").append(StringUtil.toIndentedString(id)).append("\n");
+    sb.append("    petId: ").append(StringUtil.toIndentedString(petId)).append("\n");
+    sb.append("    quantity: ").append(StringUtil.toIndentedString(quantity)).append("\n");
+    sb.append("    shipDate: ").append(StringUtil.toIndentedString(shipDate)).append("\n");
+    sb.append("    status: ").append(StringUtil.toIndentedString(status)).append("\n");
+    sb.append("    complete: ").append(StringUtil.toIndentedString(complete)).append("\n");
+    sb.append("}");
     return sb.toString();
   }
 }

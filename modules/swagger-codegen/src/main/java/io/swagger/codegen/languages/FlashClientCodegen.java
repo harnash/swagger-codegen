@@ -2,34 +2,27 @@ package io.swagger.codegen.languages;
 
 import io.swagger.codegen.CliOption;
 import io.swagger.codegen.CodegenConfig;
+import io.swagger.codegen.CodegenConstants;
 import io.swagger.codegen.CodegenType;
 import io.swagger.codegen.DefaultCodegen;
 import io.swagger.codegen.SupportingFile;
 import io.swagger.models.properties.ArrayProperty;
-import io.swagger.models.properties.MapProperty;
-import io.swagger.models.properties.Property;
-import io.swagger.models.properties.AbstractNumericProperty;
-import io.swagger.models.properties.ArrayProperty;
 import io.swagger.models.properties.BooleanProperty;
 import io.swagger.models.properties.DateProperty;
 import io.swagger.models.properties.DateTimeProperty;
-import io.swagger.models.properties.DecimalProperty;
 import io.swagger.models.properties.DoubleProperty;
 import io.swagger.models.properties.FloatProperty;
 import io.swagger.models.properties.IntegerProperty;
 import io.swagger.models.properties.LongProperty;
 import io.swagger.models.properties.MapProperty;
 import io.swagger.models.properties.Property;
-import io.swagger.models.properties.PropertyBuilder;
-import io.swagger.models.properties.RefProperty;
 import io.swagger.models.properties.StringProperty;
+import org.apache.commons.lang.StringUtils;
 
 import java.io.File;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.HashMap;
-
-import org.apache.commons.lang.StringUtils;
+import java.util.HashSet;
 
 public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig {
     protected String packageName = "io.swagger";
@@ -47,7 +40,7 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         modelTemplateFiles.put("model.mustache", ".as");
         modelTemplateFiles.put("modelList.mustache", "List.as");
         apiTemplateFiles.put("api.mustache", ".as");
-        templateDir = "flash";
+        embeddedTemplateDir = templateDir = "flash";
 
         languageSpecificPrimitives.clear();
         languageSpecificPrimitives.add("Number");
@@ -75,15 +68,19 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         importMapping.put("File", "flash.filesystem.File");
 
         // from 
-        reservedWords = new HashSet<String>(
-                Arrays.asList(
-"add", "for", "lt", "tellTarget", "and", "function", "ne", "this", "break", "ge", "new", "typeof", "continue", "gt", "not", "var", "delete", "if", "on", "void", "do", "ifFrameLoaded", "onClipEvent", "while", "else", "in", "or", "with", "eq", "le", "return"));
+        reservedWords = new HashSet<String>(Arrays.asList("add", "for", "lt", "tellTarget", "and",
+                "function", "ne", "this", "break", "ge", "new", "typeof", "continue", "gt", "not",
+                "var", "delete", "if", "on", "void", "do", "ifFrameLoaded", "onClipEvent", "while",
+                "else", "in", "or", "with", "eq", "le", "return"));
 
         cliOptions.clear();
-        cliOptions.add(new CliOption("packageName", "flash package name (convention: package.name), default: io.swagger"));
-        cliOptions.add(new CliOption("packageVersion", "flash package version, default: 1.0.0"));
-        cliOptions.add(new CliOption("invokerPackage", "root package for generated code"));
-        cliOptions.add(new CliOption("sourceFolder", "source folder for generated code. e.g. src/main/flex"));
+        cliOptions.add(new CliOption(CodegenConstants.PACKAGE_NAME, "flash package name (convention:" +
+                " package.name)").defaultValue("io.swagger"));
+        cliOptions.add(new CliOption(CodegenConstants.PACKAGE_VERSION, "flash package version")
+                .defaultValue("1.0.0"));
+        cliOptions.add(new CliOption(CodegenConstants.INVOKER_PACKAGE, CodegenConstants.INVOKER_PACKAGE_DESC));
+        cliOptions.add(new CliOption(CodegenConstants.SOURCE_FOLDER, "source folder for generated " +
+                "code. e.g. src/main/flex"));
 
     }
 
@@ -91,19 +88,19 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
     public void processOpts() {
         super.processOpts();
 
-        if (additionalProperties.containsKey("invokerPackage")) {
-            this.setInvokerPackage((String) additionalProperties.get("invokerPackage"));
+        if (additionalProperties.containsKey(CodegenConstants.INVOKER_PACKAGE)) {
+            this.setInvokerPackage((String) additionalProperties.get(CodegenConstants.INVOKER_PACKAGE));
         } else {
             //not set, use default to be passed to template
-            additionalProperties.put("invokerPackage", invokerPackage);
+            additionalProperties.put(CodegenConstants.INVOKER_PACKAGE, invokerPackage);
         }
 
-        if (additionalProperties.containsKey("sourceFolder")) {
-            this.setSourceFolder((String) additionalProperties.get("sourceFolder"));
+        if (additionalProperties.containsKey(CodegenConstants.SOURCE_FOLDER)) {
+            this.setSourceFolder((String) additionalProperties.get(CodegenConstants.SOURCE_FOLDER));
         }
 
-        if (additionalProperties.containsKey("packageName")) {
-            setPackageName((String) additionalProperties.get("packageName"));
+        if (additionalProperties.containsKey(CodegenConstants.PACKAGE_NAME)) {
+            setPackageName((String) additionalProperties.get(CodegenConstants.PACKAGE_NAME));
             apiPackage = packageName + ".client.api";
             modelPackage = packageName + ".client.model";
         }
@@ -111,20 +108,21 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
             setPackageName("io.swagger");
         }
 
-        if (additionalProperties.containsKey("packageVersion")) {
-            setPackageVersion((String) additionalProperties.get("packageVersion"));
+        if (additionalProperties.containsKey(CodegenConstants.PACKAGE_VERSION)) {
+            setPackageVersion((String) additionalProperties.get(CodegenConstants.PACKAGE_VERSION));
         }
         else {
             setPackageVersion("1.0.0");
         }
 
-        additionalProperties.put("packageName", packageName);
-        additionalProperties.put("packageVersion", packageVersion);
+        additionalProperties.put(CodegenConstants.PACKAGE_NAME, packageName);
+        additionalProperties.put(CodegenConstants.PACKAGE_VERSION, packageVersion);
 
         //modelPackage = invokerPackage + File.separatorChar + "client" + File.separatorChar + "model";
         //apiPackage = invokerPackage + File.separatorChar + "client" + File.separatorChar + "api";
 
-        final String invokerFolder = (sourceFolder + File.separator + invokerPackage + File.separator + "swagger" + File.separator).replace(".", File.separator).replace('.', File.separatorChar);
+        final String invokerFolder = (sourceFolder + File.separator + invokerPackage + File.separator
+                + "swagger" + File.separator).replace(".", File.separator).replace('.', File.separatorChar);
 
         supportingFiles.add(new SupportingFile("ApiInvoker.as", invokerFolder + "common", "ApiInvoker.as"));
         supportingFiles.add(new SupportingFile("ApiUrlHelper.as", invokerFolder + "common", "ApiUrlHelper.as"));
@@ -138,13 +136,20 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
         supportingFiles.add(new SupportingFile("Response.as", invokerFolder + "event", "Response.as"));
         supportingFiles.add(new SupportingFile("build.properties", sourceFolder, "build.properties"));
         supportingFiles.add(new SupportingFile("build.xml", sourceFolder, "build.xml"));
-        supportingFiles.add(new SupportingFile("AirExecutorApp-app.xml", sourceFolder + File.separatorChar + "bin", "AirExecutorApp-app.xml"));
-        supportingFiles.add(new SupportingFile("ASAXB-0.1.1.swc", sourceFolder + File.separatorChar + "lib", "ASAXB-0.1.1.swc"));
-        supportingFiles.add(new SupportingFile("as3corelib.swc", sourceFolder + File.separatorChar + "lib", "as3corelib.swc"));
-        supportingFiles.add(new SupportingFile("flexunit-4.1.0_RC2-28-flex_3.5.0.12683.swc", sourceFolder + File.separator + "lib" + File.separator + "ext", "flexunit-4.1.0_RC2-28-flex_3.5.0.12683.swc"));
-        supportingFiles.add(new SupportingFile("flexunit-aircilistener-4.1.0_RC2-28-3.5.0.12683.swc", sourceFolder + File.separator + "lib" + File.separator + "ext", "flexunit-aircilistener-4.1.0_RC2-28-3.5.0.12683.swc"));
-        supportingFiles.add(new SupportingFile("flexunit-cilistener-4.1.0_RC2-28-3.5.0.12683.swc", sourceFolder + File.separator + "lib" + File.separator + "ext", "flexunit-cilistener-4.1.0_RC2-28-3.5.0.12683.swc"));
-        supportingFiles.add(new SupportingFile("flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc", sourceFolder + File.separator + "lib" + File.separator + "ext", "flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc"));
+        supportingFiles.add(new SupportingFile("AirExecutorApp-app.xml", sourceFolder + File.separatorChar
+                + "bin", "AirExecutorApp-app.xml"));
+        supportingFiles.add(new SupportingFile("ASAXB-0.1.1.swc", sourceFolder + File.separatorChar
+                + "lib", "ASAXB-0.1.1.swc"));
+        supportingFiles.add(new SupportingFile("as3corelib.swc", sourceFolder + File.separatorChar
+                + "lib", "as3corelib.swc"));
+        supportingFiles.add(new SupportingFile("flexunit-4.1.0_RC2-28-flex_3.5.0.12683.swc", sourceFolder
+                + File.separator + "lib" + File.separator + "ext", "flexunit-4.1.0_RC2-28-flex_3.5.0.12683.swc"));
+        supportingFiles.add(new SupportingFile("flexunit-aircilistener-4.1.0_RC2-28-3.5.0.12683.swc", sourceFolder
+                + File.separator + "lib" + File.separator + "ext", "flexunit-aircilistener-4.1.0_RC2-28-3.5.0.12683.swc"));
+        supportingFiles.add(new SupportingFile("flexunit-cilistener-4.1.0_RC2-28-3.5.0.12683.swc", sourceFolder
+                + File.separator + "lib" + File.separator + "ext", "flexunit-cilistener-4.1.0_RC2-28-3.5.0.12683.swc"));
+        supportingFiles.add(new SupportingFile("flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc", sourceFolder
+                + File.separator + "lib" + File.separator + "ext", "flexunit-core-flex-4.0.0.2-sdk3.5.0.12683.swc"));
     }
 
     private static String dropDots(String str) {
@@ -170,11 +175,13 @@ public class FlashClientCodegen extends DefaultCodegen implements CodegenConfig 
 
     @Override
     public String apiFileFolder() {
-        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
+        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar
+                + apiPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
     }
 
     public String modelFileFolder() {
-        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar + modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
+        return (outputFolder + File.separatorChar + sourceFolder + File.separatorChar
+                + modelPackage().replace('.', File.separatorChar)).replace('/', File.separatorChar);
     }
 
     @Override
