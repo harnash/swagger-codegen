@@ -18,6 +18,7 @@
 namespace {{invokerPackage}};
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 /**
  * APIConnectorImpl Class Doc Comment
@@ -191,7 +192,7 @@ class APIConnectorImpl implements APIConnector {
         $options['headers']['User-Agent'] = $this->getUserAgent();
 
         if (! empty($queryParams)) {
-            $options['query'] = $queryParasm;
+            $options['query'] = $queryParams;
         }
 
         // debugging
@@ -208,26 +209,20 @@ class APIConnectorImpl implements APIConnector {
             $headers = "";
             if ($e->hasResponse()) {
                 $response = $e->getResponse();
-                foreach ($message->getHeaders() as $name => $values) {
-                    foreach ($values as $value) {
-                        $headers .= sprintf('%s: %s; ', $name, $value);
-                    }
-                }
             }
             throw ApiException(
                 "Error making request to $url: " . print_r($e->getRequest(), true),
                 ($response ? $response->getStatusCode() : 0),
-                $headers,
+                ($response ? $response->getHeaders() : []),
                 ($response ? $response->getBody() : "")
             );
         }
 
         $http_body = $response->getBody();
-        $http_headers = "";
+        $http_headers = [];
+        // Parsing headers to match the output of CURL's client implementation of parse_headers()
         foreach ($response->getHeaders() as $name => $values) {
-            foreach ($values as $value) {
-                $http_headers .= sprintf('%s: %s; ', $name, $value);
-            }
+            $http_headers[$name] = count($values) == 1 ? $values[0] : $values;
         }
 
         // debug HTTP response body
@@ -241,7 +236,7 @@ class APIConnectorImpl implements APIConnector {
         } else if ($response->getStatusCode() >= 200 && $response->getStatusCode() <= 299 ) {
             // return raw body if response is a file
             if ($responseType == '\SplFileObject') {
-                return array($http_body, $http_header);
+                return array($http_body, $response->getStatusCode(), $http_headers);
             }
 
             $data = json_decode($http_body);
